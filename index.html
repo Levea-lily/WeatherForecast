@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="./src/assets/arco-iris.png" type="image/png">
+    <link rel="stylesheet" href="./src/css/style.css">
+    <title>Weather Forecast</title>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div class="info">
+                <div class="city">
+                    <img class="locationIcons" src="./src/assets/Frame 3.svg" alt="">
+                    <p id="cityName">___________</p>
+                    <img class="locationIcons" src="./src/assets/Vector.svg" alt="">
+                </div>
+                <div class="climate">
+                    <p id="description">_____</p>
+                </div>
+                <div class="infoBottom">
+                    <div id="degrees">
+                        <p id="temp">__°C</p>
+                    </div>
+                    <div>
+                        <p id="date">____ | __ ___ ____</p>
+                    </div>
+                </div>
+            </div>
+            <div id="weatherIcon" class="icon">
+                <img src="./src/assets/cloud.svg" alt="a cloudy day">
+            </div>
+        </div>
+        <div id="results" class="results">
+            <div class="inputField">
+                <p>Search by City Name:</p>
+                <input onkeypress="searchInput(event)" id="searchBar" type="text" placeholder="New York" >
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./src/scripts/index.js"></script>
+</body>
+</html>
