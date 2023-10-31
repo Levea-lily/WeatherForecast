@@ -3,8 +3,8 @@
 //ALSO, you´re gay. gay. gay.
 //I hope you liked the silly rainbow in the page name, I'm pretty proud of it, it's gay.
 
-
 // API key for OpenWeatherMap
+// ** This should not be directly on code, it's sensitive info
 const key = "1be494fe196f5cb8dc69b3f8eb416139";
 
 // URL for weather icons
@@ -18,7 +18,7 @@ const cityName = document.getElementById("cityName");
 const description = document.getElementById("description");
 const temp = document.getElementById("temp");
 const date = document.getElementById("date");
-const weatherIcon = document.getElementById('weatherIcon');
+const weatherIcon = document.getElementById("weatherIcon");
 const searchBar = document.getElementById("searchBar");
 const results = document.getElementById("results");
 
@@ -26,70 +26,142 @@ const results = document.getElementById("results");
 const fiveDays = [];
 
 // Arrays for month and day names
-const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const months = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+const days = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 // Check if geolocation is available in the browser
 if ("geolocation" in navigator) {
-    // Get the user's current position
-    navigator.geolocation.getCurrentPosition((position) => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
+  // Get the user's current position
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      const latitude = position.coords.latitude;
+      const longitude = position.coords.longitude;
 
-        // Construct the API URL with latitude and longitude
-        const url = `${apiUrl}/forecast?lat=${latitude}&lon=${longitude}&units=metric&appid=${key}`;
-        getData(url);
-
-    }, (error) => {
-        alert(error.message);
-    });
+      // Construct the API URL with latitude and longitude
+      const url = `${apiUrl}/forecast?lat=${latitude}&lon=${longitude}&units=metric&appid=${key}`;
+      getData(url);
+    },
+    (error) => {
+      console.error(error.message);
+    }
+  );
 } else {
-    alert("Geolocation is not supported in this browser");
+  alert("Geolocation is not supported in this browser");
+}
+
+function filterForecast(forecastArray) {
+  const today = new Date();
+  const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+  const filteredForecast = forecastArray.filter((element) => {
+    const elementDate = new Date(element.dt * 1000);
+    return elementDate >= today && elementDate < tomorrow;
+  });
+  return filteredForecast;
+}
+
+async function initChart(forecastArray) {
+  const filteredForecast = filterForecast(forecastArray);
+
+  const labels = filteredForecast.map((element) => {
+    const elementDate = new Date(element.dt * 1000);
+    return `${elementDate.getHours()}:00`;
+  });
+
+  const datapoints = filteredForecast.map((element) => {
+    return element.main.temp;
+  });
+  const data = {
+    labels: labels,
+    datasets: [
+      {
+        label: "24-hour forecast",
+        data: datapoints,
+        borderColor: "#FFC355",
+        fill: false,
+        cubicInterpolationMode: "monotone",
+      },
+    ],
+  };
+
+  new Chart(document.getElementById("chart"), {
+    type: "line",
+    data,
+    options: {
+      responsive: true,
+      interaction: {
+        intersect: false,
+      },
+      scales: {
+        x: {
+          display: true,
+          title: {
+            display: true,
+          },
+        },
+        y: {
+          display: true,
+          suggestedMin: -20,
+          suggestedMax: 40,
+        },
+      },
+    },
+  });
 }
 
 // Function to fetch weather data from the API
-function getData(url) {
-    // Clear weather icon content
-    weatherIcon.innerHTML = "";
+async function getData(url) {
+  // Clear weather icon content
+  weatherIcon.innerHTML = "";
 
-    // Fetch data from the API
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            console.log(data);
+  // Fetch data from the API
+  await fetch(url)
+    .then((response) => response.json())
+    .then(async (data) => {
+      // Check if the city was not found
+      if (data.cod == 404) {
+        alert("City not found");
+      }
 
-            // Check if the city was not found
-            if (data.cod == 404) {
-                alert("City not found");
-            }
+      // Clear the results content
+      results.innerHTML = "";
 
-            // Filter the forecast for unique days
-            const fiveDaysForecast = data.list.filter(element => {
-                const currentDate = new Date(element.dt_txt).getDate();
-                if (!fiveDays.includes(currentDate)) {
-                    return fiveDays.push(currentDate);
-                }
-            });
+      // Parse the date and display current weather information
+      const dates = new Date(data.list[0].dt * 1000);
+      const currentDay = days[dates.getDay()];
+      const currentMonth = months[dates.getMonth()];
+      const currentDate = dates.getDate();
+      const currentYear = dates.getFullYear();
 
-            // Clear the results content
-            results.innerHTML = "";
+      // Update HTML elements with weather information
+      cityName.innerText = data.city.name;
+      description.innerText = data.list[0].weather[0].description;
+      temp.innerText = `${parseInt(data.list[0].main.temp)}°C`;
+      date.innerText = `${currentDay} | ${currentDate} ${currentMonth} ${currentYear}`;
+      weatherIcon.innerHTML = `<img src="https://openweathermap.org/img/wn/${data.list[0].weather[0].icon}@2x.png">`;
 
-            // Parse the date and display current weather information
-            const dates = new Date(data.list[0].dt * 1000);
-            const currentDay = days[dates.getDay()];
-            const currentMonth = months[dates.getMonth()];
-            const currentDate = dates.getDate();
-            const currentYear = dates.getFullYear();
-
-            // Update HTML elements with weather information
-            cityName.innerText = data.city.name;
-            description.innerText = data.list[0].weather[0].description;
-            temp.innerText = `${parseInt(data.list[0].main.temp)}°C`;
-            date.innerText = `${currentDay} | ${currentDate} ${currentMonth} ${currentYear}`;
-            weatherIcon.innerHTML = `<img src="https://openweathermap.org/img/wn/${data.list[0].weather[0].icon}@2x.png">`;
-
-            // Create HTML structure for displaying additional weather details
-            results.innerHTML = `
+      // Create HTML structure for displaying additional weather details
+      results.innerHTML = `
                 <div class="otherResults">
                     <div class="graph">
                         <canvas id="chart"></canvas>
@@ -98,40 +170,48 @@ function getData(url) {
                 </div>
             `;
 
-            // Display weather details for each day
-            forecastDays.innerHTML = `
+      // Display weather details for each day
+      forecastDays.innerHTML = `
                 <div>
-                    <h1 style="font-size: 20px; margin-top: 10px;">${days[dates.getDay()]}</h1>
+                    <h1 style="font-size: 20px; margin-top: 10px;">${
+                      days[dates.getDay()]
+                    }</h1>
                     <div style="margin-top: 30px; margin-left: -70px;">
                         <h1 style="font-size: 15px;">Air conditions</h1>
                         <div style="display: flex; margin-top: 20px;">
                             <img src="./src/assets/temp.svg">
                             <p>Real Feel</p>
                         </div>
-                        <p style="margin-left: 30px;">${parseInt(data.list[0].main.feels_like)}°C</p>
+                        <p style="margin-left: 30px;">${parseInt(
+                          data.list[0].main.feels_like
+                        )}°C</p>
                         <div style="margin-top: 20px; display: flex;">
                             <img src="./src/assets/air.svg">
                             <p>Wind</p>
                         </div>
-                        <p style="margin-left: 30px;">${data.list[0].wind.speed} km/h</p>
+                        <p style="margin-left: 30px;">${
+                          data.list[0].wind.speed
+                        } km/h</p>
                         <div style="margin-top: 10px; display: flex;">
                             <img src="./src/assets/humidity.svg">
                             <p>Humidity</p>
                         </div>
-                        <p style="margin-left: 30px;">${data.list[0].main.humidity}%</p>
+                        <p style="margin-left: 30px;">${
+                          data.list[0].main.humidity
+                        }%</p>
                     </div>
                 </div>
             `;
-        });
+
+      await initChart(data.list);
+    });
 }
 
 // Function to handle user input for city search
 function searchInput(event) {
-    // Construct the API URL with the city name from the input field
-    const url = `${apiUrl}/forecast?q=${searchBar.value}&units=metric&appid=${key}`;
-    if (event.key === "Enter") {
-        getData(url);
-    }
+  // Construct the API URL with the city name from the input field
+  const url = `${apiUrl}/forecast?q=${searchBar.value}&units=metric&appid=${key}`;
+  if (event.key === "Enter") {
+    getData(url);
+  }
 }
-
-
