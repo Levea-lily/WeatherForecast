@@ -73,7 +73,6 @@ if ("geolocation" in navigator) {
 function filterForecast(forecastArray) {
   const today = new Date();
   const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
-  console.log("tomorrow", tomorrow)
   const filteredForecast = forecastArray.filter((element) => {
     const elementDate = new Date(element.dt * 1000);
     return elementDate >= today && elementDate < tomorrow;
@@ -139,8 +138,6 @@ async function getData(url) {
   await fetch(url)
     .then((response) => response.json())
     .then(async (data) => {
-      // console.log(data);
-
       // Check if the city was not found
       if (data.cod == 404) {
         alert("City not found");
